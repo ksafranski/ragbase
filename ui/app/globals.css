@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  letter-spacing: 1.25px;
+  font-weight: 300;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background: #141519;
+  color: #e6e8eb;
+}
+
+body {
+  font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+}
+
+/* Remove shadows from buttons */
+.ant-btn {
+  box-shadow: none !important;
+}
+
+.ant-btn:hover,
+.ant-btn:focus {
+  box-shadow: none !important;
+}
+
+/* Remove shadows from all cards */
+.ant-card {
+  box-shadow: none !important;
+}
+
+/* Card hover effect - lighten background only for clickable/hoverable cards */
+.ant-card-hoverable {
+  transition: background-color 0.2s ease;
+}
+
+.ant-card-hoverable:hover {
+  box-shadow: none !important;
+  background-color: #2a3140 !important;
+  border-color: #3a3f4b !important;
+}
+
+/* Menu item overrides */
+.ant-menu-dark .ant-menu-item,
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: transparent !important;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: rgba(91, 141, 190, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.ant-menu-dark .ant-menu-item-selected .anticon {
+  color: #ffffff !important;
+}
+
+.ant-menu-dark .ant-menu-item:hover {
+  background-color: rgba(91, 141, 190, 0.1) !important;
+  color: #ffffff !important;
+}
+
