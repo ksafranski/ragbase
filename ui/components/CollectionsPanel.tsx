@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Input, List, Card, Modal, message, Space, Popconfirm, Table, Tag, Typography } from 'antd';
+import { Button, Input, List, Card, Modal, message, Space, Popconfirm, Table, Tag, Typography, Divider } from 'antd';
 import { PlusOutlined, DeleteOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
 import { listCollections, createCollection, deleteCollection, getCollectionInfo, type CollectionInfo, type CollectionDocument } from '@/lib/api';
 
@@ -76,29 +76,31 @@ export default function CollectionsPanel() {
 
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 120,
-      ellipsis: true,
-    },
-    {
-      title: 'Text',
       dataIndex: 'text',
       key: 'text',
-      ellipsis: true,
-    },
-    {
-      title: 'Metadata',
-      dataIndex: 'metadata',
-      key: 'metadata',
-      render: (metadata: Record<string, any>) => (
+      render: (text: string, record: CollectionDocument) => (
         <>
-          {Object.entries(metadata).map(([key, value]) => (
-            <Tag key={key}>
-              {key}: {JSON.stringify(value)}
-            </Tag>
-          ))}
+          <Space direction="vertical" style={{ width: '100%' }} size="small">
+            <div>
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                ID: {record.id}
+              </Text>
+            </div>
+            <div>
+              <Text>{text}</Text>
+            </div>
+            {Object.keys(record.metadata).length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <Space wrap size="small">
+                  {Object.entries(record.metadata).map(([key, value]) => (
+                    <Tag key={key} style={{ fontSize: '11px' }}>
+                      <Text type="secondary" style={{ fontSize: '11px' }}>{key}:</Text> {JSON.stringify(value)}
+                    </Tag>
+                  ))}
+                </Space>
+              </div>
+            )}
+          </Space>
         </>
       ),
     },
@@ -188,7 +190,7 @@ export default function CollectionsPanel() {
           setIsBrowseModalOpen(false);
           setCollectionInfo(null);
         }}
-        width={1000}
+        width={1400}
         footer={[
           <Button key="close" onClick={() => setIsBrowseModalOpen(false)}>
             Close
@@ -196,27 +198,31 @@ export default function CollectionsPanel() {
         ]}
       >
         {collectionInfo && (
-          <Space direction="vertical" style={{ width: '100%' }} size="middle">
-            <div>
-              <Text strong>Status: </Text>
-              <Tag color="green">{collectionInfo.status}</Tag>
-              <Text strong>Points: </Text>
-              <Tag color="blue">{collectionInfo.points_count}</Tag>
-              <Text strong>Vectors: </Text>
-              <Tag color="purple">{collectionInfo.vectors_count}</Tag>
-            </div>
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            <Space size="large">
+              <Space size="small">
+                <Text type="secondary">Status:</Text>
+                <Tag color="green">{collectionInfo.status}</Tag>
+              </Space>
+              <Space size="small">
+                <Text type="secondary">Points:</Text>
+                <Tag color="blue">{collectionInfo.points_count}</Tag>
+              </Space>
+              <Space size="small">
+                <Text type="secondary">Vectors:</Text>
+                <Tag color="purple">{collectionInfo.vectors_count}</Tag>
+              </Space>
+            </Space>
             
             <Table
               columns={columns}
               dataSource={collectionInfo.documents}
               rowKey="id"
               loading={browseLoading}
-              pagination={{
-                pageSize: 10,
-                showSizeChanger: true,
-                showTotal: (total) => `Total ${total} documents`,
-              }}
-              scroll={{ x: 800 }}
+              pagination={false}
+              size="middle"
+              showHeader={false}
+              scroll={{ y: '55vh' }}
             />
           </Space>
         )}

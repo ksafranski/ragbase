@@ -207,22 +207,25 @@ async def search(request: SearchRequest):
         # Generate query embedding
         query_vector = model.encode(request.query).tolist()
         
-        # Search in Qdrant
+        # Search in Qdrant with vectors
         results = qdrant.search(
             collection_name=request.collection,
             query_vector=query_vector,
             limit=request.limit,
-            score_threshold=request.score_threshold
+            score_threshold=request.score_threshold,
+            with_vectors=True
         )
         
         return {
             "query": request.query,
+            "query_vector": query_vector,
             "results": [
                 {
                     "id": hit.id,
                     "score": hit.score,
                     "text": hit.payload.get("text"),
-                    "metadata": {k: v for k, v in hit.payload.items() if k != "text"}
+                    "metadata": {k: v for k, v in hit.payload.items() if k != "text"},
+                    "vector": hit.vector if hasattr(hit, 'vector') else None
                 }
                 for hit in results
             ]

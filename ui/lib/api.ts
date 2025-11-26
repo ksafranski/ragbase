@@ -10,6 +10,7 @@ export interface SearchResult {
   score: number;
   text: string;
   metadata: Record<string, any>;
+  vector?: number[];
 }
 
 export interface EmbedResponse {
@@ -124,7 +125,7 @@ export async function searchDocuments(
   query: string,
   limit: number = 5,
   scoreThreshold?: number
-): Promise<{ query: string; results: SearchResult[] }> {
+): Promise<{ query: string; query_vector: number[]; results: SearchResult[] }> {
   const response = await fetch(`${API_BASE_URL}/search`, {
     method: 'POST',
     headers: {
@@ -143,4 +144,5 @@ export async function searchDocuments(
   }
   return response.json();
 }
+
 

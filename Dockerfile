@@ -1,3 +1,7 @@
+# Multi-stage build to get Qdrant web UI static files
+FROM qdrant/qdrant:latest as qdrant-ui
+RUN echo "Extracting web UI files"
+
 FROM python:3.11-slim
 
 # Install system dependencies
@@ -11,6 +15,9 @@ RUN curl -L https://github.com/qdrant/qdrant/releases/download/v1.11.3/qdrant-x8
     -o /tmp/qdrant.tar.gz && \
     tar xzf /tmp/qdrant.tar.gz -C /usr/local/bin && \
     rm /tmp/qdrant.tar.gz
+
+# Copy web UI static files from official Qdrant image
+COPY --from=qdrant-ui /qdrant/static /qdrant/static
 
 # Install Python dependencies
 COPY requirements.txt .
