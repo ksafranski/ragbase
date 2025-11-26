@@ -28,11 +28,16 @@ interface DocumentFormData {
   metadata?: string;
 }
 
-export default function UpsertPanel() {
+interface UpsertPanelProps {
+  preselectedCollection?: string;
+  onUpsertComplete?: () => void;
+}
+
+export default function UpsertPanel({ preselectedCollection, onUpsertComplete }: UpsertPanelProps = {}) {
   const [collections, setCollections] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [selectedCollection, setSelectedCollection] = useState<string>('');
+  const [selectedCollection, setSelectedCollection] = useState<string>(preselectedCollection || '');
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState<AntUploadFile[]>([]);
   const [fileMetadata, setFileMetadata] = useState<string>('');
@@ -178,6 +183,11 @@ export default function UpsertPanel() {
       message.success(`Successfully uploaded "${file.name}" and inserted ${uploaded} document(s) into "${selectedCollection}"`);
       setFileList([]);
       setFileMetadata('');
+      
+      // Trigger refresh callback
+      if (onUpsertComplete) {
+        onUpsertComplete();
+      }
     } catch (error: any) {
       setUploadProgress({ visible: false, step: '', percent: 0, total: 0, current: 0 });
       message.error(`Failed to upload file: ${error.message || error}`);
@@ -207,6 +217,11 @@ export default function UpsertPanel() {
       );
       form.resetFields(['documents']);
       form.setFieldsValue({ documents: [{ text: '', metadata: '' }] });
+      
+      // Trigger refresh callback
+      if (onUpsertComplete) {
+        onUpsertComplete();
+      }
     } catch (error) {
       message.error(`Failed to upsert documents: ${error}`);
     } finally {
@@ -259,20 +274,22 @@ export default function UpsertPanel() {
 
   return (
     <div>
-      <Form.Item
-        label="* Collection"
-        rules={[{ required: true, message: 'Please select a collection' }]}
-      >
-        <Select
-          placeholder="Select a collection"
-          options={collections.map((c) => ({ label: c, value: c }))}
-          showSearch
-          value={selectedCollection}
-          onChange={(value) => {
-            setSelectedCollection(value);
-          }}
-        />
-      </Form.Item>
+      {!preselectedCollection && (
+        <Form.Item
+          label="* Collection"
+          rules={[{ required: true, message: 'Please select a collection' }]}
+        >
+          <Select
+            placeholder="Select a collection"
+            options={collections.map((c) => ({ label: c, value: c }))}
+            showSearch
+            value={selectedCollection}
+            onChange={(value) => {
+              setSelectedCollection(value);
+            }}
+          />
+        </Form.Item>
+      )}
 
       <Collapse defaultActiveKey={['1']} style={{ marginTop: 16 }}>
         <Panel header="Upload File (PDF, CSV, XLSX, JSON)" key="1">

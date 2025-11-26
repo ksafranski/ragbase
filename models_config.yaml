@@ -1,0 +1,123 @@
+# Embedding Models Configuration
+# This file defines which embedding models are available in the RAG service
+# Models will be loaded at startup, so only include models you need to conserve memory
+
+models:
+  # ========================================
+  # ACTIVE MODELS (uncommented = loaded)
+  # ========================================
+  
+  # Fast and efficient general-purpose model
+  - name: "all-MiniLM-L6-v2"
+    dimension: 384
+    description: "Fast and efficient, good for general purpose"
+    default: true  # This will be the default model if none is specified
+    
+  # Higher quality model with more dimensions
+  - name: "all-mpnet-base-v2"
+    dimension: 768
+    description: "Higher quality embeddings, slower but more accurate"
+    default: false
+
+  # ========================================
+  # GENERAL PURPOSE MODELS
+  # ========================================
+  
+  # - name: "BAAI/bge-large-en-v1.5"
+  #   dimension: 1024
+  #   description: "Highest quality, production use"
+  #   default: false
+  
+  # - name: "thenlper/gte-large"
+  #   dimension: 1024
+  #   description: "High performance, good speed/quality balance"
+  #   default: false
+  
+  # - name: "paraphrase-multilingual-mpnet-base-v2"
+  #   dimension: 768
+  #   description: "Multiple languages (50+)"
+  #   default: false
+
+  # ========================================
+  # LONG CONTEXT MODELS (8K tokens)
+  # ========================================
+  
+  # - name: "jinaai/jina-embeddings-v2-base-en"
+  #   dimension: 768
+  #   description: "Long documents, full articles/papers (8192 tokens)"
+  #   default: false
+  
+  # - name: "jinaai/jina-embeddings-v2-small-en"
+  #   dimension: 512
+  #   description: "Long context, faster processing (8192 tokens)"
+  #   default: false
+
+  # ========================================
+  # DOMAIN-SPECIFIC MODELS (Research & Technical)
+  # ========================================
+  
+  # Scientific / Academic
+  # - name: "allenai/scibert_scivocab_uncased"
+  #   dimension: 768
+  #   description: "Research papers, academic content"
+  #   default: false
+  
+  # Biomedical
+  # - name: "pritamdeka/BioBERT-mnli-snli-scinli-scitail-mednli-stsb"
+  #   dimension: 768
+  #   description: "Medical research, healthcare documents"
+  #   default: false
+  
+  # Legal
+  # - name: "nlpaueb/legal-bert-base-uncased"
+  #   dimension: 768
+  #   description: "Legal documents, case law, contracts"
+  #   default: false
+  
+  # Patents
+  # - name: "AI-Growth-Lab/PatentSBERTa"
+  #   dimension: 768
+  #   description: "Patent documents, technical specifications"
+  #   default: false
+
+  # ========================================
+  # CODE-SPECIFIC MODELS
+  # ========================================
+  
+  # - name: "microsoft/codebert-base"
+  #   dimension: 768
+  #   description: "Code search, documentation"
+  #   default: false
+  
+  # - name: "Salesforce/codet5-base"
+  #   dimension: 768
+  #   description: "Code understanding, code-to-text"
+  #   default: false
+
+# ========================================
+# CONFIGURATION NOTES
+# ========================================
+#
+# 1. Model Loading:
+#    - Only uncommented models will be loaded at startup
+#    - Each model consumes memory (MiniLM: ~90MB, mpnet: ~420MB, large: ~1.3GB)
+#    - Only include models you actually need
+#
+# 2. Default Model:
+#    - Only ONE model should have "default: true"
+#    - This model is used when no model is specified in API calls
+#    - If no default is set, the first model is used
+#
+# 3. Model Names:
+#    - Must be valid Hugging Face model identifiers
+#    - Will be downloaded on first use and cached in models_cache/
+#    - Check https://huggingface.co/models for available models
+#
+# 4. Dimensions:
+#    - Must match the actual model's output dimension
+#    - Collections created with one dimension can't use models with different dimensions
+#
+# 5. After Changes:
+#    - Restart the service: docker-compose restart
+#    - Check loaded models: curl http://localhost:8000/models
+#    - Verify default: curl http://localhost:8000/health

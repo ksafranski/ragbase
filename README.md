@@ -11,6 +11,8 @@ A Docker-based service that combines [Qdrant](https://qdrant.tech/) vector datab
 - Basic understanding of command line
 - (Optional) curl or Postman for testing API calls
 
+> **Note**: The service now uses a configurable `models_config.yaml` file to manage embedding models. See [Models Configuration Guide](MODELS_CONFIG.md) for details.
+
 ### 1. Clone or Create the Project
 
 Create a directory structure:
@@ -162,6 +164,20 @@ print(f"Relevant Context: {context}")
 
 ## 🎛️ Configuration Options
 
+### Managing Embedding Models
+
+The service uses a `models_config.yaml` file to manage available embedding models. This allows you to:
+- Control which models are loaded at startup
+- Set a default model
+- Add or remove models without code changes
+- See detailed model information
+
+**Quick Start:**
+1. Edit `models_config.yaml` to add/remove models
+2. Restart the service: `docker-compose restart`
+
+For detailed configuration instructions, see [Models Configuration Guide](MODELS_CONFIG.md).
+
 ### Choosing an Embedding Model
 
 Different models offer different trade-offs:
@@ -259,13 +275,24 @@ curl http://localhost:8000/health
 
 ---
 
+#### `GET /models`
+List all available embedding models.
+
+```bash
+curl http://localhost:8000/models
+```
+
+Response includes model name, dimension, description, and which is the default.
+
+---
+
 #### `POST /embed`
 Generate embeddings for text.
 
 ```bash
 curl -X POST http://localhost:8000/embed \
   -H "Content-Type: application/json" \
-  -d '{"text": "Hello world"}'
+  -d '{"text": "Hello world", "model": "all-MiniLM-L6-v2"}'
 ```
 
 You can also embed multiple texts at once:
@@ -275,14 +302,22 @@ curl -X POST http://localhost:8000/embed \
   -d '{"text": ["First text", "Second text", "Third text"]}'
 ```
 
+The `model` parameter is optional. If not specified, the default model is used.
+
 ---
 
 #### `POST /collections/{collection_name}`
 Create a new collection.
 
 ```bash
-curl -X POST http://localhost:8000/collections/my_docs
+curl -X POST http://localhost:8000/collections/my_docs \
+  -H "Content-Type: application/json" \
+  -d '{"model": "all-MiniLM-L6-v2", "distance": "cosine"}'
 ```
+
+Parameters (all optional):
+- `model`: Embedding model to use (default: uses default model from config)
+- `distance`: Distance metric - "cosine", "euclidean", or "dot" (default: "cosine")
 
 ---
 
@@ -308,9 +343,17 @@ curl -X POST http://localhost:8000/upsert \
         "text": "Your document text here",
         "metadata": {"source": "manual", "date": "2024-11-25"}
       }
-    ]
+    ],
+    "model": null
   }'
 ```
+
+Parameters:
+- `collection`: Name of the collection
+- `documents`: Array of documents with text and optional metadata
+- `model`: (Optional) Only used when creating a new collection. Must match the collection's model for existing collections.
+
+**Important:** Once a collection is created with a specific model, that model cannot be changed. All documents in a collection must use the same embedding model to ensure search results are meaningful.
 
 ---
 
@@ -333,6 +376,9 @@ Parameters:
 - `query`: Your search text
 - `limit`: Maximum number of results (default: 5)
 - `score_threshold`: Minimum similarity score (0-1, optional)
+- `model`: (Optional) Must match the collection's model if specified
+
+**Important:** Search queries are automatically embedded using the same model that was used to create the collection. This ensures search results are semantically meaningful. Attempting to use a different model will be rejected.
 
 ---
 

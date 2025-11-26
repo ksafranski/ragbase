@@ -8,6 +8,7 @@ services:
     volumes:
       - ./qdrant_data:/qdrant/storage
       - ./models_cache:/models/cache
+      - ./models_config.yaml:/app/models_config.yaml:ro
     environment:
-      - EMBED_MODEL=all-MiniLM-L6-v2
+      - MODELS_CONFIG_PATH=/app/models_config.yaml
     restart: unless-stopped

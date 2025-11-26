@@ -22,7 +22,11 @@ import { listCollections, searchDocuments, type SearchResult } from '@/lib/api';
 const { TextArea } = Input;
 const { Text, Paragraph } = Typography;
 
-export default function SearchPanel() {
+interface SearchPanelProps {
+  preselectedCollection?: string;
+}
+
+export default function SearchPanel({ preselectedCollection }: SearchPanelProps = {}) {
   const [collections, setCollections] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -45,16 +49,26 @@ export default function SearchPanel() {
   };
 
   const handleSearch = async (values: {
-    collection: string;
+    collection?: string;
     query: string;
     limit: number;
     scoreThreshold?: number;
   }) => {
     setLoading(true);
     setSearchQuery(values.query);
+    
+    // Use preselected collection if available, otherwise use form value
+    const collection = preselectedCollection || values.collection;
+    
+    if (!collection) {
+      message.error('Please select a collection');
+      setLoading(false);
+      return;
+    }
+    
     try {
       const result = await searchDocuments(
-        values.collection,
+        collection,
         values.query,
         values.limit,
         values.scoreThreshold
@@ -80,22 +94,25 @@ export default function SearchPanel() {
           layout="vertical"
           onFinish={handleSearch}
           initialValues={{
+            collection: preselectedCollection || undefined,
             limit: 5,
             scoreThreshold: undefined,
           }}
           style={{ marginBottom: 24 }}
         >
-          <Form.Item
-            label="Collection"
-            name="collection"
-            rules={[{ required: true, message: 'Please select a collection' }]}
-          >
-            <Select
-              placeholder="Select a collection"
-              options={collections.map((c) => ({ label: c, value: c }))}
-              showSearch
-            />
-          </Form.Item>
+          {!preselectedCollection && (
+            <Form.Item
+              label="Collection"
+              name="collection"
+              rules={[{ required: true, message: 'Please select a collection' }]}
+            >
+              <Select
+                placeholder="Select a collection"
+                options={collections.map((c) => ({ label: c, value: c }))}
+                showSearch
+              />
+            </Form.Item>
+          )}
 
           <Form.Item
             label="Search Query"
@@ -235,11 +252,12 @@ export default function SearchPanel() {
                   overflowY: 'auto',
                   fontFamily: 'monospace',
                   fontSize: '12px',
-                  background: '#f5f5f5',
+                  background: 'rgba(255, 255, 255, 0.05)',
                   padding: '12px',
                   borderRadius: '4px',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-all',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}>
                   [{selectedResult.vector.map((v, i) => 
                     `\n  ${i}: ${v.toFixed(6)}`

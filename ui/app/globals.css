@@ -68,3 +68,30 @@ body {
   color: #ffffff !important;
 }
 
+/* Modal spacing improvements */
+.ant-modal-header {
+  margin-bottom: 2em !important;
+}
+
+.ant-modal-footer {
+  margin-top: 2em !important;
+}
+
+/* Form label alignment */
+.ant-form-item-label > label {
+  padding-left: 8px !important;
+}
+
+.ant-form-item-label > label.ant-form-item-required {
+  padding-left: 0px !important;
+}
+
+/* Collection menu items sizing */
+.collection-menu .ant-menu-item {
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 0 16px 4px !important;
+  padding: 0 16px !important;
+  border-radius: 8px !important;
+  width: calc(100% - 32px) !important;
+}

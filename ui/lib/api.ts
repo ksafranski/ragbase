@@ -20,9 +20,23 @@ export interface EmbedResponse {
 }
 
 // Health Check
-export async function checkHealth(): Promise<{ status: string; qdrant: string; model: string }> {
+export async function checkHealth(): Promise<{ status: string; qdrant: string; models_loaded: number; default_model: string }> {
   const response = await fetch(`${API_BASE_URL}/health`);
   if (!response.ok) throw new Error('Health check failed');
+  return response.json();
+}
+
+// Models
+export interface ModelInfo {
+  name: string;
+  dimension: number;
+  description: string;
+  is_default: boolean;
+}
+
+export async function listModels(): Promise<{ models: ModelInfo[]; default_model: string }> {
+  const response = await fetch(`${API_BASE_URL}/models`);
+  if (!response.ok) throw new Error('Failed to fetch models');
   return response.json();
 }
 
@@ -34,9 +48,20 @@ export async function listCollections(): Promise<string[]> {
   return data.collections;
 }
 
-export async function createCollection(collectionName: string): Promise<{ status: string; collection: string }> {
+export async function createCollection(
+  collectionName: string,
+  model?: string,
+  distance?: string
+): Promise<{ status: string; collection: string; model: string; dimension: number; distance: string }> {
   const response = await fetch(`${API_BASE_URL}/collections/${collectionName}`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: model || null,
+      distance: distance || 'cosine',
+    }),
   });
   if (!response.ok) {
     const error = await response.json();
@@ -64,9 +89,15 @@ export interface CollectionDocument {
 
 export interface CollectionInfo {
   collection: string;
+  model: string;
   vectors_count: number;
   points_count: number;
   status: string;
+  vector_size: number;
+  distance_metric: string;
+  indexed_vectors_count: number;
+  segments_count: number;
+  optimizer_status: number | null;
   documents: CollectionDocument[];
   limit: number;
   offset: number;
