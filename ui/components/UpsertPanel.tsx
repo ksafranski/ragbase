@@ -315,6 +315,7 @@ export default function UpsertPanel({ preselectedCollection, onUpsertComplete }:
               onChange={(e) => {
                 setFileMetadata(e.target.value);
               }}
+              style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 400 }}
             />
             {fileMetadata && fileMetadata.trim() && (() => {
               try {
@@ -366,7 +367,7 @@ export default function UpsertPanel({ preselectedCollection, onUpsertComplete }:
                     >
                       <Form.Item
                         {...restField}
-                        label="* Document Text"
+                        label="Document Text"
                         name={[name, 'text']}
                         rules={[{ required: true, message: 'Please enter document text' }]}
                       >
@@ -397,6 +398,7 @@ export default function UpsertPanel({ preselectedCollection, onUpsertComplete }:
                         <TextArea
                           rows={2}
                           placeholder='{"category": "example", "author": "name"}'
+                          style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: 400 }}
                         />
                       </Form.Item>
                     </Card>

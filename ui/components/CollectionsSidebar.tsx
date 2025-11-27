@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Menu, Button, Modal, Input, Form, Select, Space, message, Spin } from 'antd';
-import { PlusOutlined, DatabaseOutlined, ReloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { PlusOutlined, DatabaseOutlined, ReloadOutlined, InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import { listCollections, createCollection, listModels, type ModelInfo } from '@/lib/api';
 
 const { Text } = Typography;
@@ -92,7 +92,7 @@ export default function CollectionsSidebar({ selectedCollection, onSelectCollect
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        <div style={{ padding: '16px 16px 8px' }}>
+        <div style={{ padding: '16px 16px 8px 2.2em' }}>
           <Space style={{ width: '100%', justifyContent: 'space-between' }}>
             <Text strong style={{ fontSize: '13px', color: '#8c8c8c' }}>COLLECTIONS</Text>
             <Button
@@ -108,7 +108,7 @@ export default function CollectionsSidebar({ selectedCollection, onSelectCollect
         
         {loading && collections.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '20px' }}>
-            <Spin />
+            <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} />
           </div>
         ) : (
         <Menu

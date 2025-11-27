@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Layout, Card, Typography, Empty, Button, Modal, Space, Tag, Descriptions, Statistic, Row, Col, Spin, message } from 'antd';
-import { DatabaseOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, InfoCircleOutlined, DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import CollectionsSidebar from '@/components/CollectionsSidebar';
 import CollectionView from '@/components/CollectionView';
-import { getCollectionInfo, type CollectionInfo } from '@/lib/api';
+import { getCollectionInfo, deleteCollection, type CollectionInfo } from '@/lib/api';
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -15,6 +15,9 @@ export default function Home() {
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [collectionInfo, setCollectionInfo] = useState<CollectionInfo | null>(null);
   const [infoLoading, setInfoLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchCollectionInfo = async () => {
     if (!selectedCollection) return;
@@ -32,7 +35,33 @@ export default function Home() {
 
   const handleShowInfo = () => {
     setInfoModalOpen(true);
+    setDeleteConfirm(false); // Reset delete confirmation
     fetchCollectionInfo();
+  };
+
+  const handleDeleteClick = async () => {
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+
+    // Second click - actually delete
+    if (!selectedCollection) return;
+    
+    setDeleting(true);
+    try {
+      await deleteCollection(selectedCollection);
+      message.success(`Collection "${selectedCollection}" deleted successfully`);
+      setInfoModalOpen(false);
+      setSelectedCollection(null);
+      setCollectionInfo(null);
+      setDeleteConfirm(false);
+      setRefreshKey(prev => prev + 1); // Trigger sidebar refresh
+    } catch (error) {
+      message.error(`Failed to delete collection: ${error}`);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   // Fetch collection info when collection changes
@@ -76,6 +105,7 @@ export default function Home() {
         </div>
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <CollectionsSidebar
+            key={refreshKey}
             selectedCollection={selectedCollection}
             onSelectCollection={setSelectedCollection}
           />
@@ -138,17 +168,34 @@ export default function Home() {
           <Modal
             title={`Collection Information: ${selectedCollection}`}
             open={infoModalOpen}
-            onCancel={() => setInfoModalOpen(false)}
+            onCancel={() => {
+              setInfoModalOpen(false);
+              setDeleteConfirm(false);
+            }}
             width={720}
             footer={[
-              <Button key="close" onClick={() => setInfoModalOpen(false)}>
+              <Button 
+                key="delete" 
+                danger 
+                type={deleteConfirm ? "primary" : "default"}
+                icon={<DeleteOutlined />}
+                onClick={handleDeleteClick}
+                loading={deleting}
+                style={{ marginRight: 'auto' }}
+              >
+                {deleteConfirm ? 'Confirm Delete?' : 'Delete'}
+              </Button>,
+              <Button key="close" onClick={() => {
+                setInfoModalOpen(false);
+                setDeleteConfirm(false);
+              }}>
                 Close
               </Button>,
             ]}
           >
             {infoLoading ? (
               <div style={{ textAlign: 'center', padding: '40px' }}>
-                <Spin size="large" />
+                <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
               </div>
             ) : collectionInfo ? (
               <Space direction="vertical" style={{ width: '100%' }} size="large">

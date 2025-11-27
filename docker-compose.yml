@@ -5,6 +5,7 @@ services:
     ports:
       - "6333:6333"
       - "8000:8000"
+      - "3000:3000"
     volumes:
       - ./qdrant_data:/qdrant/storage
       - ./models_cache:/models/cache

@@ -4,10 +4,12 @@ RUN echo "Extracting web UI files"
 
 FROM python:3.11-slim
 
-# Install system dependencies
+# Install system dependencies including Node.js
 RUN apt-get update && apt-get install -y \
     curl \
     supervisor \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Qdrant - using a more recent stable version
@@ -29,6 +31,13 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY startup.sh /startup.sh
 RUN chmod +x /startup.sh
 
+# Build Next.js UI
+COPY ui/package*.json /ui/
+WORKDIR /ui
+RUN npm ci --only=production=false
+COPY ui /ui
+RUN npm run build
+
 WORKDIR /app
 
 # Create data directories
@@ -48,6 +57,6 @@ ENV API_PORT="8000"
 # Expose volumes
 VOLUME ["/qdrant/storage", "/models/cache"]
 
-EXPOSE 6333 8000
+EXPOSE 6333 8000 3000
 
 CMD ["/startup.sh"]

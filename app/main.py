@@ -290,25 +290,54 @@ async def get_collection_info(collection_name: str, limit: int = 100, offset: in
             points_count = max(0, points_count - 1)
         
         # Get sample documents using scroll (exclude metadata)
-        records, _ = qdrant.scroll(
-            collection_name=collection_name,
-            limit=limit + 1,  # Get one extra in case metadata is included
-            offset=offset,
-            with_payload=True,
-            with_vectors=False
-        )
-        
-        # Filter out metadata record (using special UUID)
+        # Note: Qdrant's scroll uses cursor-based pagination, not offset-based
+        # We need to scroll through records until we reach the desired offset, then collect limit items
         metadata_id = "00000000-0000-0000-0000-000000000000"
-        documents = [
-            {
-                "id": str(record.id),
-                "text": record.payload.get("text", ""),
-                "metadata": {k: v for k, v in record.payload.items() if k != "text" and not k.startswith("_")}
-            }
-            for record in records
-            if str(record.id) != metadata_id and not record.payload.get("_is_metadata", False)
-        ][:limit]  # Limit to requested amount
+        
+        # Scroll through records and skip until we reach the offset
+        documents = []
+        records_seen = 0
+        next_page_offset = None
+        
+        while len(documents) < limit:
+            # Fetch a batch of records (use larger batches for efficiency)
+            batch_size = 100
+            records, next_page_offset = qdrant.scroll(
+                collection_name=collection_name,
+                limit=batch_size,
+                offset=next_page_offset,
+                with_payload=True,
+                with_vectors=False
+            )
+            
+            if not records:
+                break  # No more records
+            
+            # Process each record in the batch
+            for record in records:
+                # Skip metadata record
+                if str(record.id) == metadata_id or record.payload.get("_is_metadata", False):
+                    continue
+                
+                # Skip records until we reach the offset
+                if records_seen < offset:
+                    records_seen += 1
+                    continue
+                
+                # Collect records for the result
+                if len(documents) < limit:
+                    documents.append({
+                        "id": str(record.id),
+                        "text": record.payload.get("text", ""),
+                        "metadata": {k: v for k, v in record.payload.items() if k != "text" and not k.startswith("_")}
+                    })
+                    records_seen += 1
+                else:
+                    break  # We have enough documents
+            
+            # If we have enough documents or reached the end, stop
+            if len(documents) >= limit or next_page_offset is None:
+                break
         
         # Try to get detailed collection info, but handle parsing errors gracefully
         try:

@@ -1,0 +1,41 @@
+# Node modules (will be installed in container)
+ui/node_modules
+ui/.next
+ui/.npm
+ui/.cache
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Environment files
+.env
+.env.local
+.env*.local
+
+# Build artifacts
+dist
+build
+*.egg-info
+
