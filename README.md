@@ -13,36 +13,19 @@ A Docker-based service that combines [Qdrant](https://qdrant.tech/) vector datab
 
 > **Note**: The service now uses a configurable `models_config.yaml` file to manage embedding models. See [Models Configuration Guide](MODELS_CONFIG.md) for details.
 
-### 1. Clone or Create the Project
+### Option 1: Use Pre-built Image (Recommended)
 
-Create a directory structure:
-
-```bash
-mkdir rag-service
-cd rag-service
-mkdir app
-```
-
-Download or create the files from this repository (see Project Structure below).
-
-### 2. Build the Docker Image
-
-```bash
-docker build -t rag-service .
-```
-
-This will take a few minutes the first time as it installs all dependencies.
-
-### 3. Run the Service
+Pull and run the pre-built image directly from GitHub Container Registry:
 
 ```bash
 docker run -d \
   --name my-rag \
   -p 6333:6333 \
   -p 8000:8000 \
+  -p 3000:3000 \
   -v $(pwd)/qdrant_data:/qdrant/storage \
   -v $(pwd)/models_cache:/models/cache \
-  rag-service
+  ghcr.io/ksafranski/ragbase:latest
 ```
 
 **What this does:**
@@ -50,9 +33,42 @@ docker run -d \
 - `--name my-rag`: Names your container
 - `-p 6333:6333`: Exposes Qdrant's port
 - `-p 8000:8000`: Exposes the API port
+- `-p 3000:3000`: Exposes the web UI port
 - `-v`: Saves your data between restarts
 
-### 4. Verify It's Running
+### Option 2: Build from Source
+
+If you prefer to build the image yourself:
+
+#### 1. Clone the Repository
+
+```bash
+git clone https://github.com/ksafranski/ragbase.git
+cd ragbase
+```
+
+#### 2. Build the Docker Image
+
+```bash
+docker build -t rag-service .
+```
+
+This will take a few minutes the first time as it installs all dependencies.
+
+#### 3. Run the Service
+
+```bash
+docker run -d \
+  --name my-rag \
+  -p 6333:6333 \
+  -p 8000:8000 \
+  -p 3000:3000 \
+  -v $(pwd)/qdrant_data:/qdrant/storage \
+  -v $(pwd)/models_cache:/models/cache \
+  rag-service
+```
+
+### Verify It's Running
 
 ```bash
 # Check the service status
@@ -223,10 +239,11 @@ docker run -d \
   --name my-rag \
   -p 6333:6333 \
   -p 8000:8000 \
+  -p 3000:3000 \
   -v $(pwd)/qdrant_data:/qdrant/storage \
   -v $(pwd)/models_cache:/models/cache \
   -e EMBED_MODEL="all-mpnet-base-v2" \
-  rag-service
+  ghcr.io/ksafranski/ragbase:latest
 ```
 
 ⚠️ **Important:** If you change models, you'll need to re-embed your existing data, as different models produce different vector dimensions.
@@ -397,11 +414,14 @@ For easier management, use Docker Compose:
 ```yaml
 services:
   rag-service:
-    build: .
+    image: ghcr.io/ksafranski/ragbase:latest
+    # Or build from source:
+    # build: .
     container_name: rag-service
     ports:
       - "6333:6333"
       - "8000:8000"
+      - "3000:3000"
     volumes:
       - ./qdrant_data:/qdrant/storage
       - ./models_cache:/models/cache
@@ -483,7 +503,12 @@ Include source, tags, type, labels, and other metadata and context; you can filt
 
 ## 🎨 Web UI
 
-A simple Next.js TypeScript UI is available in the `/ui` folder for managing collections and documents through a visual interface.
+A Next.js TypeScript UI is included in the Docker image and runs automatically on port 3000. No additional setup required!
+
+### Access the UI
+
+When running the Docker container, the web UI is available at:
+- **http://localhost:3000**
 
 ### Features
 - **Collections Management**: Create, list, and delete collections
@@ -491,7 +516,9 @@ A simple Next.js TypeScript UI is available in the `/ui` folder for managing col
 - **Semantic Search**: Search for similar documents with configurable parameters
 - **Generate Embeddings**: Generate and view vector embeddings for any text
 
-### Quick Start
+### Local Development
+
+If you want to run the UI locally for development:
 
 ```bash
 cd ui
