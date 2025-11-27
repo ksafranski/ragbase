@@ -17,6 +17,27 @@ A Docker-based service that combines [Qdrant](https://qdrant.tech/) vector datab
 
 Pull and run the pre-built image directly from GitHub Container Registry:
 
+#### Step 1: Create Models Configuration File
+
+Create a `models_config.yaml` file to configure which embedding models to load:
+
+```yaml
+models:
+  # Fast and efficient general-purpose model
+  - name: "all-MiniLM-L6-v2"
+    dimension: 384
+    description: "Fast and efficient, good for general purpose"
+    default: true
+    
+  # Higher quality model with more dimensions
+  - name: "all-mpnet-base-v2"
+    dimension: 768
+    description: "Higher quality embeddings, slower but more accurate"
+    default: false
+```
+
+#### Step 2: Run the Container
+
 ```bash
 docker run -d \
   --name my-rag \
@@ -25,6 +46,8 @@ docker run -d \
   -p 3000:3000 \
   -v $(pwd)/qdrant_data:/qdrant/storage \
   -v $(pwd)/models_cache:/models/cache \
+  -v $(pwd)/models_config.yaml:/app/models_config.yaml:ro \
+  -e MODELS_CONFIG_PATH=/app/models_config.yaml \
   ghcr.io/ksafranski/ragbase:latest
 ```
 
@@ -34,7 +57,12 @@ docker run -d \
 - `-p 6333:6333`: Exposes Qdrant's port
 - `-p 8000:8000`: Exposes the API port
 - `-p 3000:3000`: Exposes the web UI port
-- `-v`: Saves your data between restarts
+- `-v $(pwd)/qdrant_data:/qdrant/storage`: Persists Qdrant data
+- `-v $(pwd)/models_cache:/models/cache`: Caches downloaded models
+- `-v $(pwd)/models_config.yaml:/app/models_config.yaml:ro`: Mounts your models config (read-only)
+- `-e MODELS_CONFIG_PATH=/app/models_config.yaml`: Tells the service where to find the config
+
+**Note:** The `models_config.yaml` file defines which embedding models are loaded at startup. Only uncommented models will be loaded to conserve memory. See the [Models Configuration](#-configuration-options) section for more details.
 
 ### Option 2: Build from Source
 
@@ -57,6 +85,8 @@ This will take a few minutes the first time as it installs all dependencies.
 
 #### 3. Run the Service
 
+Make sure you have a `models_config.yaml` file (see Option 1 for an example), then run:
+
 ```bash
 docker run -d \
   --name my-rag \
@@ -65,6 +95,8 @@ docker run -d \
   -p 3000:3000 \
   -v $(pwd)/qdrant_data:/qdrant/storage \
   -v $(pwd)/models_cache:/models/cache \
+  -v $(pwd)/models_config.yaml:/app/models_config.yaml:ro \
+  -e MODELS_CONFIG_PATH=/app/models_config.yaml \
   rag-service
 ```
 
@@ -234,16 +266,31 @@ Different models offer different trade-offs:
 
 **To change models:**
 
+Edit your `models_config.yaml` file to add, remove, or change the default model:
+
+```yaml
+models:
+  - name: "all-MiniLM-L6-v2"
+    dimension: 384
+    description: "Fast and efficient, good for general purpose"
+    default: false  # Changed from true
+    
+  - name: "all-mpnet-base-v2"
+    dimension: 768
+    description: "Higher quality embeddings, slower but more accurate"
+    default: true  # Changed to default
+```
+
+Then restart the container:
+
 ```bash
-docker run -d \
-  --name my-rag \
-  -p 6333:6333 \
-  -p 8000:8000 \
-  -p 3000:3000 \
-  -v $(pwd)/qdrant_data:/qdrant/storage \
-  -v $(pwd)/models_cache:/models/cache \
-  -e EMBED_MODEL="all-mpnet-base-v2" \
-  ghcr.io/ksafranski/ragbase:latest
+docker restart my-rag
+```
+
+Or if running with docker-compose:
+
+```bash
+docker-compose restart
 ```
 
 ⚠️ **Important:** If you change models, you'll need to re-embed your existing data, as different models produce different vector dimensions.
@@ -252,10 +299,12 @@ docker run -d \
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `EMBED_MODEL` | `all-MiniLM-L6-v2` | Which embedding model to use |
+| `MODELS_CONFIG_PATH` | `/app/models_config.yaml` | Path to the models configuration YAML file |
 | `QDRANT_HOST` | `localhost` | Qdrant server host |
 | `QDRANT_PORT` | `6333` | Qdrant server port |
 | `API_PORT` | `8000` | FastAPI server port |
+
+**Note:** Embedding models are now configured via `models_config.yaml` instead of the `EMBED_MODEL` environment variable. This allows you to load multiple models and switch between them without restarting the service.
 
 ## 🔌 API Reference
 
@@ -425,10 +474,13 @@ services:
     volumes:
       - ./qdrant_data:/qdrant/storage
       - ./models_cache:/models/cache
+      - ./models_config.yaml:/app/models_config.yaml:ro
     environment:
-      - EMBED_MODEL=all-MiniLM-L6-v2
+      - MODELS_CONFIG_PATH=/app/models_config.yaml
     restart: unless-stopped
 ```
+
+**Note:** Make sure you have a `models_config.yaml` file in the same directory as your `docker-compose.yml`. See the [Quick Start](#option-1-use-pre-built-image-recommended) section for an example configuration.
 
 **Commands:**
 ```bash
