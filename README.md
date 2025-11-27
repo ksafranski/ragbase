@@ -64,6 +64,45 @@ docker run -d \
 
 **Note:** The `models_config.yaml` file defines which embedding models are loaded at startup. Only uncommented models will be loaded to conserve memory. See the [Models Configuration](#-configuration-options) section for more details.
 
+#### Apple Silicon (M-series Mac) Compatibility
+
+The Docker image is built for both AMD64 and ARM64 platforms. If you're on an M-series Mac and encounter a "no matching manifest" error:
+
+**Option 1: Use platform emulation (quick fix)**
+```bash
+docker run -d \
+  --name my-rag \
+  --platform linux/amd64 \
+  -p 6333:6333 \
+  -p 8000:8000 \
+  -p 3000:3000 \
+  -v $(pwd)/qdrant_data:/qdrant/storage \
+  -v $(pwd)/models_cache:/models/cache \
+  -v $(pwd)/models_config.yaml:/app/models_config.yaml:ro \
+  -e MODELS_CONFIG_PATH=/app/models_config.yaml \
+  ghcr.io/ksafranski/ragbase:latest
+```
+
+**Option 2: Build locally for ARM64 (better performance)**
+```bash
+git clone https://github.com/ksafranski/ragbase.git
+cd ragbase
+docker build --platform linux/arm64 -t rag-service .
+docker run -d \
+  --name my-rag \
+  --platform linux/arm64 \
+  -p 6333:6333 \
+  -p 8000:8000 \
+  -p 3000:3000 \
+  -v $(pwd)/qdrant_data:/qdrant/storage \
+  -v $(pwd)/models_cache:/models/cache \
+  -v $(pwd)/models_config.yaml:/app/models_config.yaml:ro \
+  -e MODELS_CONFIG_PATH=/app/models_config.yaml \
+  rag-service
+```
+
+**Note:** After the next push to GitHub, the workflow will automatically build multi-platform images, so you won't need these workarounds.
+
 ### Option 2: Build from Source
 
 If you prefer to build the image yourself:
